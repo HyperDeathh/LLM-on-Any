@@ -1,0 +1,2 @@
+[console_scripts]
+lom = llm_on_mobile.cli:app

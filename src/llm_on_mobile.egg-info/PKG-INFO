@@ -1,0 +1,92 @@
+Metadata-Version: 2.4
+Name: llm-on-mobile
+Version: 0.1.0
+Summary: Cross-platform mobile-friendly CLI to list, download, and run open-source LLMs (Android Termux + iOS via Pythonista/Shortcuts).
+Author: Your Name
+License: MIT
+Keywords: llm,mobile,android,ios,termux,offline
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: requests>=2.31.0
+Requires-Dist: tqdm>=4.66.0
+Requires-Dist: typer>=0.12.0
+Requires-Dist: rich>=13.7.0
+Provides-Extra: llama
+Requires-Dist: llama-cpp-python>=0.2.90; extra == "llama"
+Dynamic: license-file
+
+# LLM on Mobile
+
+A tiny, open-source CLI that lists, downloads, and runs open-source LLMs with a mobile-first mindset.
+
+- Android: Termux (recommended)
+- iOS: Pythonista / Shortcuts (limited), or build a Swift runner (future)
+
+## Features
+
+- `lom list` — shows available models and whether they are downloaded
+- `lom download <n>` — downloads model `n` to `~/.llm-on-mobile/models`
+- `lom chat <n> -p "Hello"` — runs a quick prompt via `llama-cpp-python` (optional dependency)
+
+## Quickstart (Desktop for development)
+
+- Requires Python 3.9+
+
+```powershell
+python -m venv .venv ; .\.venv\Scripts\Activate.ps1
+pip install -e .
+# optional for local inference
+pip install -e .[llama]
+
+# try it
+lom list
+lom download 3
+lom chat 3 -p "Merhaba nasılsın?"
+```
+
+## Android (Termux)
+
+1. Install Termux from F-Droid (recommended) and open it.
+2. Setup Python and dependencies:
+
+```bash
+pkg update -y && pkg upgrade -y
+pkg install -y python clang cmake git
+python -m venv .venv && source .venv/bin/activate
+pip install --upgrade pip setuptools wheel
+pip install llm-on-mobile
+# optional for local inference (may build from source)
+pip install "llama-cpp-python[metal]==0.2.90" || pip install llama-cpp-python
+```
+
+3. Use it:
+
+```bash
+lom list
+lom download 3
+lom chat 3 -p "Hello from Termux"
+```
+
+Notes:
+- On some devices, `llama-cpp-python` needs `cmake` build; it can be slow. Consider prebuilt `llama.cpp` binary and call it via subprocess (future adapter).
+- Storage: models live under `$HOME/.llm-on-mobile/models`. Set `LOM_HOME` to change path.
+
+## iOS options
+
+- Pythonista: can install pure-Python packages; C-extensions like `llama-cpp-python` aren’t supported. Plan: remote inference or Swift runner.
+- Shortcuts + a small Swift app with `llama.cpp` is a future track.
+
+## Roadmap
+
+- Model registry file (JSON) synced from GitHub
+- Adapter for calling `llama.cpp` binary (no Python binding) on Android
+- Quantization-awareness and device capability checks
+- Simple HTTP server mode for chat UI
+
+## License
+
+MIT
