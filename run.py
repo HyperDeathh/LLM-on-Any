@@ -7,6 +7,7 @@ import subprocess
 import shutil
 import platform
 from pathlib import Path
+import shlex
 
 # Ensure src/ is importable when running from repo without installing
 ROOT = Path(__file__).resolve().parent
@@ -207,8 +208,29 @@ def main() -> None:
     from llm_on_mobile import cli as lom_cli
 
     print("\n[info] Available Models\n")
-    # call the Typer command function directly
     lom_cli.list_models()
+
+    # Simple interactive shell to run lom commands directly via run.py
+    print("\nType lom commands here (e.g., 'list', 'download 3', 'chat 3'). Ctrl-D to exit.\n")
+    while True:
+        try:
+            line = input("lom> ").strip()
+        except (EOFError, KeyboardInterrupt):
+            print("\n[exit]")
+            break
+        if not line:
+            continue
+        if line.lower() in {"exit", "quit"}:
+            break
+        try:
+            args = shlex.split(line)
+            # Invoke Typer app programmatically
+            lom_cli.app(args=args, prog_name="lom", standalone_mode=False)
+        except SystemExit:
+            # Typer/Click may raise SystemExit; ignore in REPL
+            pass
+        except Exception as e:
+            print("[shell] error:", e)
 
 
 if __name__ == "__main__":
