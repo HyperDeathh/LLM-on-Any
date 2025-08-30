@@ -53,7 +53,6 @@ Notes:
 ### Linux (Ubuntu/Debian/Fedora/Arch)
 
 ```bash
-```powershell
 python -m venv .venv ; .\.venv\Scripts\Activate.ps1
 pip install -e .
 # Local inference (GGUF via llama.cpp, optional):
@@ -63,7 +62,6 @@ pip install -e .[llama]
 pip install -e .[hf]
 # Torch kurulumu platforma özeldir; CPU için örnek:
 pip install torch --index-url https://download.pytorch.org/whl/cpu
-```
 
 ## Quickstart
 
@@ -81,29 +79,33 @@ lom chat 3 -p "Hello there!"
 
 ## Android (Termux)
 
-### Android (Termux)
+Recommended: install from GitHub with a one-liner and use the helper script.
 
+Quick install from GitHub
 ```bash
+pkg update -y && pkg upgrade -y && \
+pkg install -y python clang make cmake git && \
+git clone https://github.com/HyperDeathh/LLM-on-Any.git && \
+cd LLM-on-Any && bash scripts/termux-setup.sh
+```
 
+What it does
+- Creates a Python venv `.venv` and installs this repo (`pip install -e .`).
+- Installs optional `llama-cpp-python` (may compile; failure is tolerated).
+- Installs the `lom` CLI into the venv.
+
+Daily usage
 ```bash
-pkg update -y && pkg upgrade -y
-pkg install -y python clang cmake git
-python -m venv .venv && source .venv/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install llm-on-mobile
-# Local inference (may compile):
-pip install llama-cpp-python || echo "Skipping"
-
-# Use
+source .venv/bin/activate
 lom list
 lom download 3
 lom chat 3
 ```
 
 Notes
-- On some devices `llama-cpp-python` compiles from source; we’ll add a direct `llama.cpp` binary adapter next.
-- Data dir: `$LOM_HOME` (default `~/.llmonany`). Models live under `models/`.
- - Original/safetensors modeller için Transformers yolunu kullanın (bkz. Install bölümü). Gated repo’lar için önce HF’de şartları kabul edin.
+- Data dir: `$LOM_HOME` (default `~/.llmonany`). Models under `~/.llmonany/models`.
+- If you see build errors for `llama-cpp-python`, you can skip it; Transformers (safetensors) also works but is heavier.
+- For gated HF repos, accept terms and run `huggingface-cli login` before download.
 
 ## Commands
 
