@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Termux bootstrap for LLMonAny (LLM on Any)
 pkg update -y && pkg upgrade -y
-pkg install -y python clang cmake git
+pkg install -y python clang make cmake git
 
 # Python venv
 if [ ! -d .venv ]; then
@@ -17,10 +17,12 @@ pip install --upgrade pip setuptools wheel
 if [ -f "pyproject.toml" ]; then
   pip install -e .
 else
-  pip install llm-on-mobile
+  # Project package name in pyproject is 'llm-on-any'
+  pip install llm-on-any
 fi
 
-# Optional: local inference via llama-cpp-python (may compile, can be slow)
+# Optional: local inference via llama-cpp-python (may compile; often fails on Termux without extra toolchain)
+# If this fails, you can skip and use remote/back-end adapters instead.
 pip install llama-cpp-python || echo "Skipping llama-cpp-python (build failed). You can use remote adapters later."
 
 echo "\nDone. Try: lom list (LLMonAny)"

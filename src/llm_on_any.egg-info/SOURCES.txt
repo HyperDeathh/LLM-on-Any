@@ -1,0 +1,17 @@
+LICENSE
+README.md
+pyproject.toml
+src/llm_on_any.egg-info/PKG-INFO
+src/llm_on_any.egg-info/SOURCES.txt
+src/llm_on_any.egg-info/dependency_links.txt
+src/llm_on_any.egg-info/entry_points.txt
+src/llm_on_any.egg-info/requires.txt
+src/llm_on_any.egg-info/top_level.txt
+src/llm_on_mobile/__init__.py
+src/llm_on_mobile/cli.py
+src/llm_on_mobile/config.py
+src/llm_on_mobile/downloader.py
+src/llm_on_mobile/history.py
+src/llm_on_mobile/models_registry.py
+src/llm_on_mobile/runner.py
+src/llm_on_mobile/transformers_runner.py

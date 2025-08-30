@@ -22,6 +22,21 @@ def _sha256(path: Path) -> str:
 
 def download_file(url: str, dest: Path, expected_sha256: Optional[str] = None) -> Path:
     dest.parent.mkdir(parents=True, exist_ok=True)
+    # If file already exists and either no checksum provided or checksum matches, skip
+    if dest.exists():
+        if expected_sha256:
+            try:
+                if _sha256(dest).lower() == expected_sha256.lower():
+                    return dest
+            except Exception:
+                pass
+        else:
+            return dest
+        # If checksum mismatched, remove and re-download
+        try:
+            dest.unlink(missing_ok=True)
+        except Exception:
+            pass
     tmp = dest.with_suffix(dest.suffix + ".part")
 
     headers = {}

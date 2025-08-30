@@ -9,10 +9,10 @@
     "sha256": null
   },
   {
-    "id": "phi-3-mini-4k-q4",
-    "name": "Phi-3 Mini 4K Q4_0",
+  "id": "qwen2-1.5b-instruct-q4_0",
+  "name": "Qwen2 1.5B Instruct Q4_0",
     "size": "~2.3 GB",
-    "family": "phi",
+  "family": "qwen",
     "format": "gguf",
     "url": "https://huggingface.co/Qwen/Qwen2-1.5B-Instruct-GGUF/resolve/main/qwen2-1_5b-instruct-q4_0.gguf?download=true"
   }

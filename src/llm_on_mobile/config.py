@@ -27,6 +27,8 @@ class Settings:
     ctx_size: int = 4096
     threads: Optional[int] = None
     system_prompt: str = "You are a helpful assistant."
+    # Device preference for Transformers (cpu|cuda|mps|auto)
+    device: str = "cpu"
 
     @staticmethod
     def from_dict(d: Dict[str, Any]) -> "Settings":

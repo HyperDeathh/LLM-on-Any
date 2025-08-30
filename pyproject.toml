@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "llm-on-mobile"
+name = "llm-on-any"
 version = "0.1.0"
 description = "Cross-platform mobile-friendly CLI to list, download, and run open-source LLMs (Android Termux + iOS via Pythonista/Shortcuts)."
 requires-python = ">=3.9"
@@ -27,6 +27,11 @@ dependencies = [
 
 [project.optional-dependencies]
 llama = ["llama-cpp-python>=0.2.90"]
+hf = [
+  "transformers>=4.41.0",
+  "accelerate>=0.30.0",
+  # Torch is platform-specific; user may install the right build.
+]
 
 [project.scripts]
 lom = "llm_on_mobile.cli:app"

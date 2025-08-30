@@ -5,7 +5,10 @@ from typing import List, Optional, Tuple
 import json
 import os
 from pathlib import Path
-from huggingface_hub import hf_hub_url
+try:
+    from huggingface_hub import hf_hub_url  # optional
+except Exception:  # pragma: no cover
+    hf_hub_url = None  # type: ignore
 
 # Simple registry: replace with your curated list when you provide it.
 # Each model has a display name, family, quantization, size label, and a download URL.
@@ -192,7 +195,7 @@ def resolve_model_url(m: Model) -> Tuple[Optional[str], bool]:
     """
     if m.url:
         return m.url, m.gated
-    if m.hf_repo and m.hf_filename:
+    if m.hf_repo and m.hf_filename and hf_hub_url is not None:
         try:
             url = hf_hub_url(repo_id=m.hf_repo, filename=m.hf_filename)
             return url, m.gated
