@@ -428,6 +428,75 @@ def list_models():
 
 
 @app.command()
+def registry(
+    refresh: bool = typer.Option(False, "--refresh", "-r", help="Merge repo models into data dir registry (adds missing ids)."),
+):
+    """Show which registry is active and optionally refresh the data dir models.json from repo."""
+    # Determine active source similar to models_registry.load_models priority
+    env_path = os.environ.get("LOM_REGISTRY")
+    dd = data_dir()
+    data_models = dd / "models.json"
+    cwd_models = Path.cwd() / "models.json"
+    cwd_sample = Path.cwd() / "models.sample.json"
+
+    active = None
+    if env_path and Path(env_path).exists():
+        active = Path(env_path)
+    elif data_models.exists():
+        active = data_models
+    elif cwd_models.exists():
+        active = cwd_models
+    else:
+        active = None  # builtin defaults
+
+    if refresh:
+        # Choose repo source to merge from: prefer models.json then models.sample.json
+        src = None
+        if cwd_models.exists():
+            src = cwd_models
+        elif cwd_sample.exists():
+            src = cwd_sample
+        if not src:
+            print("No repo models.json or models.sample.json found in current directory.")
+            return
+        # Ensure data dir file exists and merge non-duplicate ids
+        try:
+            existing = []
+            if data_models.exists():
+                existing = json.loads(data_models.read_text(encoding="utf-8"))
+            repo = json.loads(src.read_text(encoding="utf-8"))
+            by_id = {m.get("id"): m for m in existing if isinstance(m, dict) and m.get("id")}
+            added = 0
+            for m in repo:
+                mid = m.get("id") if isinstance(m, dict) else None
+                if mid and mid not in by_id:
+                    existing.append(m)
+                    by_id[mid] = m
+                    added += 1
+            if existing and not data_models.exists():
+                data_models.parent.mkdir(parents=True, exist_ok=True)
+            if existing:
+                data_models.write_text(json.dumps(existing, indent=2), encoding="utf-8")
+            print(f"Refreshed registry at {data_models} (+{added} new model(s))")
+        except Exception as e:
+            print("Failed to refresh:", e)
+            return
+
+    # Show active source and count
+    models = load_models()
+    print("Active registry:")
+    if env_path and Path(env_path).exists():
+        print("  LOM_REGISTRY:", env_path)
+    elif active is None:
+        print("  Built-in defaults (no models.json found)")
+    else:
+        print("  ", str(active))
+    print("Models:", len(models))
+    if len(models) < 3:
+        print("Tip: Use 'registry -r' to merge repo models into your data registry, then run 'list' and 'download 3'.")
+
+
+@app.command()
 def download(
     n: int = typer.Argument(0, help="Model number from the list"),
     include: str = typer.Option("", "--include", "-i", help="HF allow_patterns (glob or comma-separated) to limit files"),
