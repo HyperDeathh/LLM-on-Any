@@ -3,8 +3,11 @@ requests>=2.31.0
 tqdm>=4.66.0
 typer>=0.12.0
 rich>=13.7.0
-huggingface_hub>=0.21.4
-
+# Pin to <0.33 to avoid hf-xet (Rust/maturin) on Termux/Android
+huggingface_hub>=0.21.4,<0.33
+llama-cpp-python>=0.2.90
+transformers>=4.41.0
+accelerate>=0.30.0
 # --- Optional extras (uncomment as needed) ---
 # GGUF backend (llama.cpp bindings)
 # llama-cpp-python>=0.2.90

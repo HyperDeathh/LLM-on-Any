@@ -42,6 +42,13 @@ def main() -> None:
     except Exception:
         pass
 
+    def _have(mod: str) -> bool:
+        try:
+            __import__(mod)
+            return True
+        except Exception:
+            return False
+
     def _dispatch(tokens: List[str]) -> None:
         if not tokens:
             return
@@ -94,6 +101,12 @@ def main() -> None:
                     else:
                         print("Usage: download <n> [-i PATTERNS] [--id MODEL_ID]")
                         return
+                # Ensure minimal deps for HF snapshot
+                if not _have("huggingface_hub"):
+                    print("huggingface_hub eksik. Yüklemek için:")
+                    print("  python -m pip install huggingface_hub tqdm")
+                    print("(Termux ise aynı komutu kullanın. Proje bağımlılıkları için: python -m pip install -r requirements.txt)")
+                    return
                 lom_cli.download(n=n, include=include, id=mid)
                 return
             if cmd == "delete":

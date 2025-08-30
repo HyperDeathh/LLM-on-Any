@@ -227,6 +227,12 @@ def main() -> None:
             return True
         cmd = tokens[0].lower()
         rest = tokens[1:]
+        def _have(mod: str) -> bool:
+            try:
+                __import__(mod)
+                return True
+            except Exception:
+                return False
         try:
             if cmd in {"list", "ls"}:
                 lom_cli.list_models()
@@ -270,6 +276,11 @@ def main() -> None:
                     else:
                         print("Usage: download <n> [-i PATTERNS] [--id MODEL_ID]")
                         return True
+                if not _have("huggingface_hub"):
+                    print("huggingface_hub missing. Install:")
+                    print("  python -m pip install huggingface_hub tqdm")
+                    print("Or install project deps: python -m pip install -r requirements.txt")
+                    return True
                 lom_cli.download(n=n, include=include, id=mid)
                 return True
             if cmd == "delete" and rest and rest[0].lstrip("-+").isdigit():
