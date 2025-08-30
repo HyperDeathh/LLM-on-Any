@@ -8,6 +8,8 @@ import shutil
 import platform
 from pathlib import Path
 import shlex
+import re
+from typing import List
 
 # Ensure src/ is importable when running from repo without installing
 ROOT = Path(__file__).resolve().parent
@@ -212,9 +214,104 @@ def main() -> None:
 
     # Simple interactive shell to run lom commands directly via run.py
     print("\nType lom commands here (e.g., 'list', 'download 3', 'chat 3'). Ctrl-D to exit.\n")
+
+    def _sanitize(s: str) -> str:
+        # Replace common non-standard spaces with normal space, collapse repeats
+        s = s.replace("\u00A0", " ").replace("\u2007", " ").replace("\u202F", " ")
+        s = re.sub(r"\s+", " ", s).strip()
+        return s
+
+    def _dispatch(tokens: List[str]) -> bool:
+        """Manual dispatch for common commands; returns True if handled."""
+        if not tokens:
+            return True
+        cmd = tokens[0].lower()
+        rest = tokens[1:]
+        try:
+            if cmd in {"list", "ls"}:
+                lom_cli.list_models()
+                return True
+            if cmd == "help":
+                lom_cli.help()
+                return True
+            if cmd == "registry":
+                refresh = any(t in {"-r", "--refresh"} for t in rest)
+                lom_cli.registry(refresh=refresh)
+                return True
+            if cmd == "download":
+                n = 0
+                include = ""
+                mid = ""
+                i = 0
+                while i < len(rest):
+                    t = rest[i]
+                    if t in {"-i", "--include"} and i + 1 < len(rest):
+                        include = rest[i + 1]
+                        i += 2
+                        continue
+                    if t == "--id" and i + 1 < len(rest):
+                        mid = rest[i + 1]
+                        i += 2
+                        continue
+                    if t.lstrip("-+").isdigit() and n == 0:
+                        try:
+                            n = int(t)
+                        except Exception:
+                            n = 0
+                    i += 1
+                if n == 0 and not mid:
+                    try:
+                        lom_cli.list_models()
+                    except Exception:
+                        pass
+                    sel = input("Model # to download: ").strip()
+                    if sel.isdigit():
+                        n = int(sel)
+                    else:
+                        print("Usage: download <n> [-i PATTERNS] [--id MODEL_ID]")
+                        return True
+                lom_cli.download(n=n, include=include, id=mid)
+                return True
+            if cmd == "delete" and rest and rest[0].lstrip("-+").isdigit():
+                lom_cli.delete(int(rest[0]))  # type: ignore[arg-type]
+                return True
+            if cmd in {"chat", "quick"}:
+                n = None
+                prompt = ""
+                i = 0
+                while i < len(rest):
+                    t = rest[i]
+                    if t in {"-p", "--prompt"} and i + 1 < len(rest):
+                        prompt = rest[i + 1]
+                        i += 2
+                        continue
+                    if n is None and t.lstrip("-+").isdigit():
+                        n = int(t)
+                    i += 1
+                if n is None:
+                    try:
+                        lom_cli.list_models()
+                    except Exception:
+                        pass
+                    sel = input(f"Model # to {cmd}: ").strip()
+                    if sel.isdigit():
+                        n = int(sel)
+                    else:
+                        print(f"Usage: {cmd} <n> [-p PROMPT]")
+                        return True
+                if cmd == "chat":
+                    lom_cli.chat(n=n, prompt=prompt)
+                else:
+                    lom_cli.quick(n=n, prompt=prompt)
+                return True
+        except Exception as e:
+            print("[dispatch] error:", e)
+            return True
+        return False
+
     while True:
         try:
-            line = input("lom> ").strip()
+            line = _sanitize(input("lom> "))
         except (EOFError, KeyboardInterrupt):
             print("\n[exit]")
             break
@@ -224,8 +321,9 @@ def main() -> None:
             break
         try:
             args = shlex.split(line)
-            # Invoke Typer app programmatically
-            lom_cli.app(args=args, prog_name="lom", standalone_mode=False)
+            if not _dispatch(args):
+                # Fallback to Typer app programmatically
+                lom_cli.app(args=args, prog_name="lom", standalone_mode=False)
         except SystemExit:
             # Typer/Click may raise SystemExit; ignore in REPL
             pass

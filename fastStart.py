@@ -82,6 +82,18 @@ def main() -> None:
                         except Exception:
                             n = 0
                     i += 1
+                if n == 0 and not mid:
+                    # Interactive assist: show list and ask for number
+                    try:
+                        lom_cli.list_models()
+                    except Exception:
+                        pass
+                    sel = input("Model # to download: ").strip()
+                    if sel.isdigit():
+                        n = int(sel)
+                    else:
+                        print("Usage: download <n> [-i PATTERNS] [--id MODEL_ID]")
+                        return
                 lom_cli.download(n=n, include=include, id=mid)
                 return
             if cmd == "delete":
@@ -103,8 +115,16 @@ def main() -> None:
                         n = int(t)
                     i += 1
                 if n is None:
-                    print("Usage: chat <n> [-p PROMPT]")
-                    return
+                    try:
+                        lom_cli.list_models()
+                    except Exception:
+                        pass
+                    sel = input("Model # to chat: ").strip()
+                    if sel.isdigit():
+                        n = int(sel)
+                    else:
+                        print("Usage: chat <n> [-p PROMPT]")
+                        return
                 lom_cli.chat(n=n, prompt=prompt)
                 return
             if cmd == "quick":
@@ -121,8 +141,16 @@ def main() -> None:
                         n = int(t)
                     i += 1
                 if n is None:
-                    print("Usage: quick <n> [-p PROMPT]")
-                    return
+                    try:
+                        lom_cli.list_models()
+                    except Exception:
+                        pass
+                    sel = input("Model # to quick chat: ").strip()
+                    if sel.isdigit():
+                        n = int(sel)
+                    else:
+                        print("Usage: quick <n> [-p PROMPT]")
+                        return
                 lom_cli.quick(n=n, prompt=prompt)
                 return
         except Exception as e:
