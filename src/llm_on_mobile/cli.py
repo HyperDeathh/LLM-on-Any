@@ -66,15 +66,35 @@ def models_dir() -> Path:
     return data_dir() / "models"
 
 
+def _order_key(m: Model):
+    fam_rank = {
+        "llama": 0,
+        "deepseek": 1,
+        "grok": 2,
+    }.get(m.family, 9)
+    fmt_rank = 0 if m.format.lower() == "gguf" else 1
+    # Prefer smaller models first within groups for practicality
+    size_hint = 0 if ("~" in m.size or "GB" in m.size) else 1
+    return (fmt_rank, fam_rank, size_hint, m.name.lower())
+
+
+def _sorted_models() -> list[Model]:
+    try:
+        return sorted(load_models(), key=_order_key)
+    except Exception:
+        return load_models()
+
+
 def _hf_snapshot(repo: str, include: Optional[str], dest_dir: Path, default_exclude: bool = False) -> Path:
     """Download HF repo files into dest_dir/<repo_name> with detailed per-file progress.
     If include is None, try to download all files; otherwise respect glob/comma-separated patterns.
     """
+    have_hf = True
     try:
         from huggingface_hub import list_repo_files, hf_hub_url, snapshot_download
         from tqdm.auto import tqdm as _tqdm  # fallback for snapshot
-    except Exception as e:
-        raise RuntimeError("huggingface_hub is required: pip install huggingface_hub") from e
+    except Exception:
+        have_hf = False
 
     local = dest_dir / repo.replace("/", "__")
     local.mkdir(parents=True, exist_ok=True)
@@ -107,10 +127,12 @@ def _hf_snapshot(repo: str, include: Optional[str], dest_dir: Path, default_excl
         ]
 
     # Try listing files to do per-file downloads with our progress bars
-    try:
-        all_files = list_repo_files(repo_id=repo)
-    except Exception:
-        all_files = None
+    all_files = None
+    if have_hf:
+        try:
+            all_files = list_repo_files(repo_id=repo)
+        except Exception:
+            all_files = None
 
     # If we were able to list files, conditionally prefer shards over 'original' single-file
     shards_present = False
@@ -126,23 +148,45 @@ def _hf_snapshot(repo: str, include: Optional[str], dest_dir: Path, default_excl
             ignore_globs.append('original/**')
 
     if all_files is None:
-        # Fallback: use snapshot (shows at least a global progress bar)
-        try:
-            snapshot_download(
-                repo_id=repo,
-                local_dir=str(local),
-                local_dir_use_symlinks=False,
-                allow_patterns=None if include_globs is None else include_globs,
-                repo_type=None,
-                ignore_patterns=ignore_globs or None,
-                cache_dir=str(data_dir() / "hf-cache"),
-                tqdm_class=_tqdm,
-            )
-        except Exception as e:
-            raise typer.BadParameter(
-                f"Failed to fetch snapshot for {repo}. It may be gated, nonexistent, or you may need to login/accept terms on HF. Error: {e}"
-            )
-        return local
+        if have_hf:
+            # Fallback: use snapshot (shows at least a global progress bar)
+            try:
+                snapshot_download(
+                    repo_id=repo,
+                    local_dir=str(local),
+                    local_dir_use_symlinks=False,
+                    allow_patterns=None if include_globs is None else include_globs,
+                    repo_type=None,
+                    ignore_patterns=ignore_globs or None,
+                    cache_dir=str(data_dir() / "hf-cache"),
+                    tqdm_class=_tqdm,
+                )
+            except Exception as e:
+                raise typer.BadParameter(
+                    f"Failed to fetch snapshot for {repo}. It may be gated, nonexistent, or you may need to login/accept terms on HF. Error: {e}"
+                )
+            return local
+        else:
+            # No huggingface_hub available. Allow a limited mode only if include_globs
+            # are explicit file paths (no wildcards). We'll construct direct URLs:
+            # https://huggingface.co/<repo>/resolve/main/<path>
+            if include_globs is None:
+                raise typer.BadParameter(
+                    "huggingface_hub is not installed. For full snapshots install it, or pass -i with exact filenames (no wildcards)."
+                )
+            # Validate patterns: must not contain wildcards
+            wild = [p for p in include_globs if any(ch in p for ch in "*?[")]
+            if wild:
+                raise typer.BadParameter(
+                    "When huggingface_hub is missing, -i must list exact file paths without wildcards."
+                )
+            # Proceed to direct downloads for each listed file
+            for rel in include_globs:
+                url = f"https://huggingface.co/{repo}/resolve/main/{rel}?download=true"
+                dest_path = local / rel
+                dest_path.parent.mkdir(parents=True, exist_ok=True)
+                download_file(url, dest_path)
+            return local
 
     # Filter by patterns
     if include_globs is None:
@@ -406,16 +450,17 @@ def _download_model(m: Model, include_override: Optional[str] = None) -> Path:
 
 @app.command("list")
 def list_models():
-    table = Table(title="Available Models")
-    table.add_column("#", justify="right")
-    table.add_column("ID")
-    table.add_column("Name")
-    table.add_column("Size")
+    table = Table(title="Available Models", box=box.SIMPLE_HEAVY)
+    table.add_column("#", justify="right", style="bold")
+    table.add_column("ID", max_width=26, overflow="fold")
+    table.add_column("Name", max_width=48, overflow="ellipsis")
+    table.add_column("Size", justify="right")
     table.add_column("Status")
-    table.add_column("Source")
+    table.add_column("Source", max_width=28, overflow="ellipsis")
 
-    models = load_models()
-    for idx, m in enumerate(models, start=1):
+    models_sorted = _sorted_models()
+
+    for idx, m in enumerate(models_sorted, start=1):
         dest = _resolve_local_source(m)
         status = "downloaded" if dest.exists() else "not downloaded"
         src = m.hf_repo or ("direct" if m.url else "")
@@ -483,7 +528,7 @@ def registry(
             return
 
     # Show active source and count
-    models = load_models()
+    models = _sorted_models()
     print("Active registry:")
     if env_path and Path(env_path).exists():
         print("  LOM_REGISTRY:", env_path)
@@ -502,7 +547,7 @@ def download(
     include: str = typer.Option("", "--include", "-i", help="HF allow_patterns (glob or comma-separated) to limit files"),
     id: str = typer.Option("", "--id", help="Select model by id (overrides number)"),
 ):
-    models = load_models()
+    models = _sorted_models()
     if id:
         matches = [m for m in models if m.id == id]
         if not matches:
@@ -520,7 +565,7 @@ def download(
 @app.command()
 def delete(n: int = typer.Argument(..., help="Model number from the list to delete")):
     """Delete a downloaded model (file or folder) from local storage."""
-    models = load_models()
+    models = _sorted_models()
     if n < 1 or n > len(models):
         raise typer.BadParameter("Invalid model number")
     m = models[n - 1]

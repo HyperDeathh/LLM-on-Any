@@ -9,6 +9,15 @@
     "sha256": null
   },
   {
+    "id": "llama-3-8b-lexi-uncensored-q4_k_m",
+    "name": "Llama-3 8B Lexi Uncensored Q4_K_M (GGUF)",
+    "size": "~5 GB",
+    "family": "llama",
+    "format": "gguf",
+    "url": "https://huggingface.co/Orenguteng/Llama-3-8B-Lexi-Uncensored-GGUF/resolve/main/Llama-3-8B-Lexi-Uncensored.Q4_K_M.gguf?download=true",
+    "sha256": null
+  },
+  {
     "id": "qwen2-1.5b-instruct-q4_0",
     "name": "Qwen2 1.5B Instruct Q4_0",
     "size": "~2.3 GB",
@@ -24,6 +33,94 @@
     "format": "safetensors",
     "url": "",
     "hf_repo": "TinyLlama/TinyLlama-1.1B-Chat-v1.0",
+    "hf_filename": null,
+    "gated": false
+  },
+  {
+    "id": "llama-3.1-8b-instruct",
+    "name": "Llama 3.1 8B Instruct (original)",
+    "size": ">= 15 GB",
+    "family": "llama",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "meta-llama/Llama-3.1-8B-Instruct",
+    "hf_filename": null,
+    "gated": true
+  },
+  {
+    "id": "llama-4-scout-17b-16e-instruct",
+    "name": "Llama 4 Scout 17B 16E Instruct (original)",
+    "size": ">= 30 GB",
+    "family": "llama",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "meta-llama/Llama-4-Scout-17B-16E-Instruct",
+    "hf_filename": null,
+    "gated": true
+  },
+  {
+    "id": "llama-4-maverick-17b-128e-instruct",
+    "name": "Llama 4 Maverick 17B 128E Instruct (original)",
+    "size": ">= 30 GB",
+    "family": "llama",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+    "hf_filename": null,
+    "gated": true
+  },
+  {
+    "id": "llama-3.3-70b-instruct",
+    "name": "Llama 3.3 70B Instruct (original, multi-file)",
+    "size": ">= 140 GB",
+    "family": "llama",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "meta-llama/Llama-3.3-70B-Instruct",
+    "hf_filename": null,
+    "gated": true
+  },
+  {
+    "id": "grok-2",
+    "name": "Grok-2 (original, multi-file)",
+    "size": "~500 GB",
+    "family": "grok",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "xai-org/grok-2",
+    "hf_filename": null,
+    "gated": true
+  },
+  {
+    "id": "deepseek-v3.1",
+    "name": "DeepSeek V3.1 (original, multi-file)",
+    "size": "varies",
+    "family": "deepseek",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "deepseek-ai/DeepSeek-V3.1",
+    "hf_filename": null,
+    "gated": false
+  },
+  {
+    "id": "deepseek-r1",
+    "name": "DeepSeek R1 (original, multi-file)",
+    "size": "varies",
+    "family": "deepseek",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "deepseek-ai/DeepSeek-R1",
+    "hf_filename": null,
+    "gated": false
+  },
+  {
+    "id": "deepseek-v2-lite-chat",
+    "name": "DeepSeek V2 Lite Chat (original, multi-file)",
+    "size": "varies",
+    "family": "deepseek",
+    "format": "safetensors",
+    "url": "",
+    "hf_repo": "deepseek-ai/DeepSeek-V2-Lite-Chat",
     "hf_filename": null,
     "gated": false
   },
