@@ -79,6 +79,7 @@ def _order_key(m: Model):
 
 
 def _sorted_models() -> list[Model]:
+    # Kept for future use; default flow uses file order to match models.json
     try:
         return sorted(load_models(), key=_order_key)
     except Exception:
@@ -450,7 +451,7 @@ def _download_model(m: Model, include_override: Optional[str] = None) -> Path:
 
 @app.command("list")
 def list_models():
-    table = Table(title="Available Models", box=box.SIMPLE_HEAVY)
+    table = Table(title="Available Models", box=box.SIMPLE_HEAVY, show_lines=True)
     table.add_column("#", justify="right", style="bold")
     table.add_column("ID", max_width=26, overflow="fold")
     table.add_column("Name", max_width=48, overflow="ellipsis")
@@ -458,7 +459,7 @@ def list_models():
     table.add_column("Status")
     table.add_column("Source", max_width=28, overflow="ellipsis")
 
-    models_sorted = _sorted_models()
+    models_sorted = load_models()  # file order (models.json)
 
     for idx, m in enumerate(models_sorted, start=1):
         dest = _resolve_local_source(m)
@@ -528,7 +529,7 @@ def registry(
             return
 
     # Show active source and count
-    models = _sorted_models()
+    models = load_models()
     print("Active registry:")
     if env_path and Path(env_path).exists():
         print("  LOM_REGISTRY:", env_path)
@@ -547,7 +548,7 @@ def download(
     include: str = typer.Option("", "--include", "-i", help="HF allow_patterns (glob or comma-separated) to limit files"),
     id: str = typer.Option("", "--id", help="Select model by id (overrides number)"),
 ):
-    models = _sorted_models()
+    models = load_models()
     if id:
         matches = [m for m in models if m.id == id]
         if not matches:
@@ -565,7 +566,7 @@ def download(
 @app.command()
 def delete(n: int = typer.Argument(..., help="Model number from the list to delete")):
     """Delete a downloaded model (file or folder) from local storage."""
-    models = _sorted_models()
+    models = load_models()
     if n < 1 or n > len(models):
         raise typer.BadParameter("Invalid model number")
     m = models[n - 1]
@@ -909,7 +910,7 @@ def paths():
     print("History:", HISTORY_DIR)
 
 
-@app.command("registry")
+@app.command("registry-info")
 def registry_info():
     """Show where the model registry is loaded from and how to override."""
     print("Registry sources priority:\n1) $LOM_REGISTRY\n2) $LOM_HOME/models.json\n3) ./models.json\n4) built-in")
